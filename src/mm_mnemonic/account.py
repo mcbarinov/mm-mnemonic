@@ -45,6 +45,8 @@ def derive_account(coin: Coin, mnemonic: str, passphrase: str, path: str) -> Acc
     match coin:
         case Coin.BTC:
             return btc.derive_account(mnemonic, passphrase, path)
+        case Coin.BTC_TESTNET:
+            return btc.derive_account(mnemonic, passphrase, path, testnet=True)
         case Coin.ETH:
             return eth.derive_account(mnemonic, passphrase, path)
         case _:
@@ -57,6 +59,8 @@ def get_default_path_prefix(coin: Coin) -> str:
     match coin:
         case Coin.BTC:
             return btc.DEFAULT_BTC_PATH_PREFIX
+        case Coin.BTC_TESTNET:
+            return btc.DEFAULT_BTC_TESTNET_PATH_PREFIX
         case Coin.ETH:
             return eth.DEFAULT_ETH_PATH_PREFIX
         case _:

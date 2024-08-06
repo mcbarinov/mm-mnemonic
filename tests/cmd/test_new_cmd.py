@@ -23,6 +23,16 @@ def test_new_cmd_btc(runner):
     assert keys_file.accounts[3].path == "m/44'/0'/0'/0/3"
 
 
+def test_new_cmd_btc_testnet(runner):
+    result = runner.invoke(app, ["new", "-c", "btc_testnet", "-l", 7])
+    assert result.exit_code == 0
+    keys_file = parse_keys_file(result.stdout)
+    assert len(keys_file.passphrase) == 32
+    assert get_seed(keys_file.mnemonic, keys_file.passphrase).hex() == keys_file.seed
+    assert len(keys_file.accounts) == 7
+    assert keys_file.accounts[3].path == "m/44'/1'/0'/0/3"
+
+
 def test_new_generates_different(runner):
     res1 = runner.invoke(app, ["new", "-c", "eth", "-l", 1])
     res2 = runner.invoke(app, ["new", "-c", "eth", "-l", 1])
