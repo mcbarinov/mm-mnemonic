@@ -2,7 +2,6 @@ import os.path
 import shutil
 
 from mm_mnemonic.cli.cli import app
-
 from tests.conftest import create_random_output_dir
 
 
