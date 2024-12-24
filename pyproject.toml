@@ -1,6 +1,6 @@
 [project]
 name = "mm-mnemonic"
-version = "0.0.3"
+version = "0.0.4"
 description = ""
 requires-python = ">=3.12"
 dependencies = [
@@ -9,7 +9,7 @@ dependencies = [
     "ecdsa==0.19.0",
     "base58==2.1.1",
     "typing-extensions==4.12.2",
-    "typer==0.14.0",
+    "typer==0.15.1",
 ]
 [project.scripts]
 mm-mnemonic = "mm_mnemonic.cli.cli:app"
@@ -22,10 +22,10 @@ build-backend = "hatchling.build"
 dev-dependencies = [
     "pytest~=8.3.3",
     "pytest-xdist~=3.6.1",
-    "ruff~=0.8.1",
+    "ruff~=0.8.4",
     "pip-audit~=2.7.3",
     "bandit~=1.8.0",
-    "mypy~=1.13.0",
+    "mypy~=1.14.0",
     "pyinstaller~=6.11.1",
 ]
 

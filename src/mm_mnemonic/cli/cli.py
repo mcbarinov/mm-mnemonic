@@ -21,18 +21,29 @@ from mm_mnemonic.types import Coin
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False, add_completion=False)
 
 
+def mnemonic_words_callback(value: int) -> int:
+    if value not in [12, 15, 21, 24]:
+        raise typer.BadParameter("Words must be one of: 12, 15, 21, 24")
+    return value
+
+
 @app.command(name="new", help="Derive accounts from a generated mnemonic with a passphrase.")
 def new_command(
     coin: Annotated[Coin, typer.Option("--coin", "-c")] = Coin.ETH,
     path_prefix: Annotated[str, typer.Option("--prefix")] = "",
-    limit: Annotated[int, typer.Option("--limit", "-l")] = 10,
+    limit: Annotated[int, typer.Option("--limit", "-l", help="How many account to derive")] = 10,
+    words: Annotated[
+        int, typer.Option("--words", "-w", callback=mnemonic_words_callback, help="How many words to generate: 12, 15, 21, 24")
+    ] = 24,
     no_passphrase: Annotated[bool, typer.Option("--no-passphrase", help="Empty passphrase")] = False,
     columns: Annotated[
         str,
         typer.Option("--columns", help="columns to print: all,mnemonic,passphrase,seed,path,address,private"),
     ] = "all",
 ) -> None:
-    new_cmd.run(NewCmdParams(coin=coin, path_prefix=path_prefix, limit=limit, columns=columns, no_passphrase=no_passphrase))
+    new_cmd.run(
+        NewCmdParams(coin=coin, path_prefix=path_prefix, limit=limit, columns=columns, no_passphrase=no_passphrase, words=words)
+    )
 
 
 @app.command(name="batch1", help="Generate batches of accounts. Each batch has its own mnemonic and password.")

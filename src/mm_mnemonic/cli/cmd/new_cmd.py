@@ -15,6 +15,7 @@ class NewCmdParams:
     path_prefix: str
     limit: int
     columns: str
+    words: int
     no_passphrase: bool
 
     def __post_init__(self) -> None:
@@ -25,7 +26,7 @@ class NewCmdParams:
 
 
 def run(params: NewCmdParams) -> None:
-    mnemonic = generate_mnemonic()
+    mnemonic = generate_mnemonic(params.words)
     passphrase = "" if params.no_passphrase else generate_passphrase()
     accounts = derive_accounts(
         coin=params.coin,
