@@ -28,15 +28,12 @@ def is_address_matched(address: str, search_pattern: str | None) -> bool:
 
 
 def derive_accounts(coin: Coin, mnemonic: str, passphrase: str, path_prefix: str | None, limit: int) -> list[Account]:
-    result = []
     if not path_prefix:
         path_prefix = get_default_path_prefix(coin)
     if not path_prefix.endswith("/"):
         path_prefix = path_prefix + "/"
 
-    for i in range(limit):
-        result.append(derive_account(coin, mnemonic, passphrase, path=f"{path_prefix}{i}"))
-    return result
+    return [derive_account(coin, mnemonic, passphrase, path=f"{path_prefix}{i}") for i in range(limit)]
 
 
 def derive_account(coin: Coin, mnemonic: str, passphrase: str, path: str) -> Account:

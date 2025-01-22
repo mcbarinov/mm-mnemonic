@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 from mm_mnemonic.cli.cli import app
 
 
@@ -36,7 +33,7 @@ def test_check_for_bad_batch_count(runner, output_dir):
 
 def test_check_for_inconsistent_files(runner, output_dir):
     runner.invoke(app, ["batch2", "-c", "eth", "-b", 7, "-l", 8, "-o", str(output_dir)])
-    Path(os.path.join(output_dir, "addresses_1.txt")).unlink()
+    (output_dir / "addresses_1.txt").unlink()
     result = runner.invoke(app, ["verify-batch2", str(output_dir)])
     assert result.exit_code == 1
     assert result.stdout.strip() == "error: invalid batch2 folder, inconsistent files"
@@ -44,8 +41,8 @@ def test_check_for_inconsistent_files(runner, output_dir):
 
 def test_inconsistent_limit(runner, output_dir):
     runner.invoke(app, ["batch2", "-c", "eth", "-b", 7, "-l", 8, "-o", str(output_dir)])
-    data = Path(os.path.join(output_dir, "addresses_3.txt")).read_text()
-    Path(os.path.join(output_dir, "addresses_3.txt")).write_text(data + "\nnew-address")
+    data = (output_dir / "addresses_3.txt").read_text()
+    (output_dir / "addresses_3.txt").write_text(data + "\nnew-address")
     result = runner.invoke(app, ["verify-batch2", str(output_dir)])
     assert result.exit_code == 1
     assert result.stdout.strip() == "error: inconsistent limit"

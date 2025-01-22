@@ -20,7 +20,7 @@ def derive_account(mnemonic: str, passphrase: str, path: str, testnet: bool = Fa
 
 
 class Key:
-    def __init__(self, private_key: bytes, testnet: bool = False):
+    def __init__(self, private_key: bytes, testnet: bool = False) -> None:
         self.private_key = private_key
         self.testnet = testnet
 
@@ -84,8 +84,7 @@ def _pubkey_from_point_to_bytes(x: int, y: int, compressed: bool = True) -> byte
     if compressed:
         parity = y & 1
         return (2 + parity).to_bytes(1, byteorder="big") + x_bytes
-    else:
-        return b"\04" + x_bytes + y_bytes
+    return b"\04" + x_bytes + y_bytes
 
 
 def _sha256(inputs: bytes) -> bytes:
@@ -106,5 +105,4 @@ def _base58_cksum(inputs: bytes) -> bytes:
     """Computes base 58 four bytes check sum"""
     s1 = _sha256(inputs)
     s2 = _sha256(s1)
-    checksum = s2[0:4]
-    return checksum
+    return s2[0:4]

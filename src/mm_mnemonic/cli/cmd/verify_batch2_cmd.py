@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
@@ -50,11 +49,11 @@ def _check_batch_count(directory_path: Path) -> int:
 
 
 def _check_inconsistenced_files(directory_path: Path, batches: int) -> None:
-    all_files = {str(f.absolute()) for f in directory_path.iterdir()}
+    all_files = set(directory_path.iterdir())
 
-    addresses = [os.path.join(directory_path.absolute(), f"addresses_{i}.txt") for i in range(1, batches + 1)]
-    mnemonics = [os.path.join(directory_path.absolute(), f"mnemonics_{i}.txt") for i in range(1, batches + 1)]
-    keys = [os.path.join(directory_path.absolute(), f"keys_{i}.txt") for i in range(1, batches + 1)]
+    addresses = [directory_path / f"addresses_{i}.txt" for i in range(1, batches + 1)]
+    mnemonics = [directory_path / f"mnemonics_{i}.txt" for i in range(1, batches + 1)]
+    keys = [directory_path / f"keys_{i}.txt" for i in range(1, batches + 1)]
     needed_files = set(addresses).union(mnemonics).union(keys)
 
     if all_files != needed_files:
@@ -66,16 +65,16 @@ def _read_batches(directory_path: Path, batch_count: int) -> list[Batch]:
         batches = []
         for i in range(1, batch_count + 1):
             # addresses
-            data = Path(os.path.join(directory_path, f"addresses_{i}.txt")).read_text().strip()
+            data = (directory_path / f"addresses_{i}.txt").read_text().strip()
             addresses = data.splitlines()
 
             # mnemonics
-            data = Path(os.path.join(directory_path, f"mnemonics_{i}.txt")).read_text().strip()
+            data = (directory_path / f"mnemonics_{i}.txt").read_text().strip()
             mnemonics = data.splitlines()
 
             # keys
             keys = []
-            data = Path(os.path.join(directory_path, f"keys_{i}.txt")).read_text().strip()
+            data = (directory_path / f"keys_{i}.txt").read_text().strip()
             for row in data.splitlines():
                 arr = row.split()
                 path = arr[0]
@@ -85,16 +84,16 @@ def _read_batches(directory_path: Path, batch_count: int) -> list[Batch]:
                 keys.append(Batch.Key(path=path, address=address, private=private, mnemonic=mnemonic))
 
             batches.append(Batch(addresses=addresses, mnemonics=mnemonics, keys=keys))
-        return batches
+        return batches  # noqa: TRY300
     except Exception as _:
         _exit("can't parse batches")
 
 
 def _check_limit(batches: list[Batch]) -> int:
     limit = len(batches[0].addresses)
-    addresses_ok = all([len(b.addresses) == limit for b in batches])
-    mnemonics_ok = all([len(b.mnemonics) == limit for b in batches])
-    keys_ok = all([len(b.keys) == limit for b in batches])
+    addresses_ok = all(len(b.addresses) == limit for b in batches)
+    mnemonics_ok = all(len(b.mnemonics) == limit for b in batches)
+    keys_ok = all(len(b.keys) == limit for b in batches)
     if addresses_ok and mnemonics_ok and keys_ok:
         return limit
     _exit("inconsistent limit")
@@ -131,7 +130,7 @@ def _get_coin(batches: list[Batch]) -> Coin:
     path = batches[0].keys[0].path
     if path.startswith("m/44'/0'/"):
         return Coin.BTC
-    elif path.startswith("m/44'/60'/"):
+    if path.startswith("m/44'/60'/"):
         return Coin.ETH
     _exit("invalid coin path")
 

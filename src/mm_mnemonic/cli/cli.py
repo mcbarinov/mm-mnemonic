@@ -106,7 +106,7 @@ def check_command() -> None:
 def version_callback(value: bool) -> None:
     if value:
         typer.echo(f"mm-mnemonic version: {cli_utils.get_version()}")
-        raise typer.Exit()
+        raise typer.Exit
 
 
 @app.callback()

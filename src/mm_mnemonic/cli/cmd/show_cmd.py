@@ -25,8 +25,7 @@ def run(params: ShowCmdParams) -> None:
             mnemonic = getpass.getpass("mnemonic")
             if is_valid_mnemonic(mnemonic):
                 break
-            else:
-                typer.echo("invalid mnemonic")
+            typer.echo("invalid mnemonic")
         else:
             break
 

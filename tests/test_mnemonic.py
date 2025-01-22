@@ -11,7 +11,7 @@ def test_get_seed(mnemonic, passphrase, seed):
 
 
 def test_is_is_valid_mnemonic(mnemonic):
-    bad_mnemonic = "almost harsh bag amused margin alpha coffee shoot letter science twin plate move depart badge rough bacon bomb dwarf jealous mistake repeat agree crop"  # noqa
+    bad_mnemonic = "almost harsh bag amused margin alpha coffee shoot letter science twin plate move depart badge rough bacon bomb dwarf jealous mistake repeat agree crop"  # noqa: E501
     assert is_valid_mnemonic(mnemonic)
     assert not is_valid_mnemonic(bad_mnemonic)
     assert not is_valid_mnemonic("123")

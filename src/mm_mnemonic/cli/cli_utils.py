@@ -70,7 +70,7 @@ def get_max_file_number_suffix(parent_dir: Path) -> int | None:
         res = re.match(r".*_(\d+)\.txt$", str(f.absolute()))
         if res:
             new_value = int(res.group(1))
-            result = max(new_value, result) if result is not None else new_value  # type: ignore
+            result = max(new_value, result) if result is not None else new_value  # type: ignore[call-overload]
     return result
 
 
