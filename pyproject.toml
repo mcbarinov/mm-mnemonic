@@ -10,6 +10,7 @@ dependencies = [
     "base58==2.1.1",
     "typing-extensions==4.13.2",
     "typer==0.15.4",
+    "pynacl>=1.5.0",
 ]
 [project.scripts]
 mm-mnemonic = "mm_mnemonic.cli.cli:app"
