@@ -4,10 +4,10 @@ from mm_mnemonic.types import Coin
 
 
 @dataclass
-class Account:
+class DerivedAccount:
+    path: str
     address: str
     private: str
-    path: str
 
 
 def is_address_matched(address: str, search_pattern: str | None) -> bool:
@@ -27,17 +27,15 @@ def is_address_matched(address: str, search_pattern: str | None) -> bool:
     return address.startswith(start_address) and address.endswith(end_address)
 
 
-def derive_accounts(coin: Coin, mnemonic: str, passphrase: str, path_prefix: str | None, limit: int) -> list[Account]:
-    if not path_prefix:
-        path_prefix = get_default_path_prefix(coin)
-    if not path_prefix.endswith("/"):
-        path_prefix = path_prefix + "/"
+def derive_accounts(coin: Coin, mnemonic: str, passphrase: str, derivation_path: str | None, limit: int) -> list[DerivedAccount]:
+    if not derivation_path:
+        derivation_path = get_default_derivation_path(coin)
 
-    return [derive_account(coin, mnemonic, passphrase, path=f"{path_prefix}{i}") for i in range(limit)]
+    return [derive_account(coin, mnemonic, passphrase, path=derivation_path.replace("{i}", str(i))) for i in range(limit)]
 
 
-def derive_account(coin: Coin, mnemonic: str, passphrase: str, path: str) -> Account:
-    from mm_mnemonic import btc, eth
+def derive_account(coin: Coin, mnemonic: str, passphrase: str, path: str) -> DerivedAccount:
+    from mm_mnemonic.chains import btc, eth, sol, trx
 
     match coin:
         case Coin.BTC:
@@ -46,19 +44,27 @@ def derive_account(coin: Coin, mnemonic: str, passphrase: str, path: str) -> Acc
             return btc.derive_account(mnemonic, passphrase, path, testnet=True)
         case Coin.ETH:
             return eth.derive_account(mnemonic, passphrase, path)
+        case Coin.SOL:
+            return sol.derive_account(mnemonic, passphrase, path)
+        case Coin.TRX:
+            return trx.derive_account(mnemonic, passphrase, path)
         case _:
             raise NotImplementedError
 
 
-def get_default_path_prefix(coin: Coin) -> str:
-    from mm_mnemonic import btc, eth
+def get_default_derivation_path(coin: Coin) -> str:
+    from mm_mnemonic.chains import btc, eth, sol, trx
 
     match coin:
         case Coin.BTC:
-            return btc.DEFAULT_BTC_PATH_PREFIX
+            return btc.DEFAULT_DERIVATION_PATH
         case Coin.BTC_TESTNET:
-            return btc.DEFAULT_BTC_TESTNET_PATH_PREFIX
+            return btc.DEFAULT_DERIVATION_PATH_TESTNET
         case Coin.ETH:
-            return eth.DEFAULT_ETH_PATH_PREFIX
+            return eth.DEFAULT_DERIVATION_PATH
+        case Coin.SOL:
+            return sol.DEFAULT_DERIVATION_PATH
+        case Coin.TRX:
+            return trx.DEFAULT_DERIVATION_PATH
         case _:
             raise NotImplementedError

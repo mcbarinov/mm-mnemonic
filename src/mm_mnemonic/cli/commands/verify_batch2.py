@@ -27,7 +27,7 @@ class Batch:
 def run(directory_path: Path) -> None:
     directory_path = directory_path.expanduser()
     batch_count = _check_batch_count(directory_path)
-    _check_inconsistenced_files(directory_path, batch_count)
+    _check_inconsistent_files(directory_path, batch_count)
     batches = _read_batches(directory_path, batch_count)
     limit = _check_limit(batches)
     total_accounts = _check_total_accounts(batches, batch_count=batch_count, limit=limit)
@@ -48,7 +48,7 @@ def _check_batch_count(directory_path: Path) -> int:
     return batch_count
 
 
-def _check_inconsistenced_files(directory_path: Path, batches: int) -> None:
+def _check_inconsistent_files(directory_path: Path, batches: int) -> None:
     all_files = set(directory_path.iterdir())
 
     addresses = [directory_path / f"addresses_{i}.txt" for i in range(1, batches + 1)]

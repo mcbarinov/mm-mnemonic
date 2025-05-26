@@ -3,22 +3,25 @@ from typing import Annotated, Union
 
 import typer
 
-from mm_mnemonic.cli import cli_utils
-from mm_mnemonic.cli.cmd import (
-    batch1_cmd,
-    batch2_cmd,
-    check_cmd,
-    new_cmd,
-    show_cmd,
-    verify_batch2_cmd,
-)
-from mm_mnemonic.cli.cmd.batch1_cmd import Batch1CmdParams
-from mm_mnemonic.cli.cmd.batch2_cmd import Batch2CmdParams
-from mm_mnemonic.cli.cmd.new_cmd import NewCmdParams
-from mm_mnemonic.cli.cmd.show_cmd import ShowCmdParams
+from mm_mnemonic.cli import cli_utils, commands
+from mm_mnemonic.cli.commands.batch1 import Batch1CmdParams
+from mm_mnemonic.cli.commands.batch2 import Batch2CmdParams
+from mm_mnemonic.cli.commands.new import NewCmdParams
+from mm_mnemonic.cli.commands.show import ShowCmdParams
 from mm_mnemonic.types import Coin
 
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False, add_completion=False)
+
+
+DerivationPathOption = Annotated[
+    str | None,
+    typer.Option(
+        "--derivation-path",
+        help="The derivation path to use (e.g., m/44'/0'/0'/0/{i}). If not specified, a default path will be used.",
+    ),
+]
+CoinOption = Annotated[Coin, typer.Option("--coin", "-c")]
+LimitOption = Annotated[int, typer.Option("--limit", "-l", help="How many accounts to derive")]
 
 
 def mnemonic_words_callback(value: int) -> int:
@@ -29,9 +32,9 @@ def mnemonic_words_callback(value: int) -> int:
 
 @app.command(name="new", help="Derive accounts from a generated mnemonic with a passphrase.")
 def new_command(
-    coin: Annotated[Coin, typer.Option("--coin", "-c")] = Coin.ETH,
-    path_prefix: Annotated[str, typer.Option("--prefix")] = "",
-    limit: Annotated[int, typer.Option("--limit", "-l", help="How many account to derive")] = 10,
+    coin: CoinOption = Coin.ETH,
+    limit: LimitOption = 10,
+    derivation_path: DerivationPathOption = None,
     words: Annotated[
         int, typer.Option("--words", "-w", callback=mnemonic_words_callback, help="How many words to generate: 12, 15, 21, 24")
     ] = 24,
@@ -41,8 +44,10 @@ def new_command(
         typer.Option("--columns", help="columns to print: all,mnemonic,passphrase,seed,path,address,private"),
     ] = "all",
 ) -> None:
-    new_cmd.run(
-        NewCmdParams(coin=coin, path_prefix=path_prefix, limit=limit, columns=columns, no_passphrase=no_passphrase, words=words)
+    commands.new.run(
+        NewCmdParams(
+            coin=coin, derivation_path=derivation_path, limit=limit, columns=columns, no_passphrase=no_passphrase, words=words
+        )
     )
 
 
@@ -51,11 +56,11 @@ def batch1_command(
     batches: Annotated[int, typer.Option("--batches", "-b", help="How many batches(files) will be generated.")],
     limit: Annotated[int, typer.Option("--limit", "-l", help="How many accounts will be generated for a batch.")],
     output_dir: Annotated[str, typer.Option("--output-dir", "-o", help="Where to store files with the generated accounts.")],
-    coin: Annotated[Coin, typer.Option("--coin", "-c")] = Coin.ETH,
-    path_prefix: Annotated[str, typer.Option("--prefix")] = "",
+    coin: CoinOption = Coin.ETH,
+    derivation_path: DerivationPathOption = None,
 ) -> None:
-    batch1_cmd.run(
-        Batch1CmdParams(batches=batches, output_dir=output_dir, coin=coin, path_prefix=path_prefix, limit=limit),
+    commands.batch1.run(
+        Batch1CmdParams(batches=batches, output_dir=output_dir, coin=coin, derivation_path=derivation_path, limit=limit),
     )
 
 
@@ -64,16 +69,16 @@ def batch2_command(
     batches: Annotated[int, typer.Option("--batches", "-b", help="How many batches(files) will be generated.")],
     limit: Annotated[int, typer.Option("--limit", "-l", help="How many accounts will be generated for a batch.")],
     output_dir: Annotated[str, typer.Option("--output-dir", "-o", help="Where to store files with the generated accounts.")],
-    coin: Annotated[Coin, typer.Option("--coin", "-c")] = Coin.ETH,
-    path_prefix: Annotated[str, typer.Option("--prefix")] = "",
+    coin: CoinOption = Coin.ETH,
+    derivation_path: DerivationPathOption = None,
     words: Annotated[int, typer.Option("--words", "-w")] = 24,
 ) -> None:
-    batch2_cmd.run(
+    commands.batch2.run(
         Batch2CmdParams(
             batches=batches,
             output_dir=output_dir,
             coin=coin,
-            path_prefix=path_prefix,
+            derivation_path=derivation_path,
             limit=limit,
             words=words,
         ),
@@ -84,23 +89,25 @@ def batch2_command(
 def verify_batch2_command(
     directory_path: Annotated[Path, typer.Argument(..., exists=True, dir_okay=True, readable=True)],
 ) -> None:
-    verify_batch2_cmd.run(directory_path)
+    commands.verify_batch2.run(directory_path)
 
 
 @app.command(name="show", help="Derive accounts from the specified mnemonic and passhprase.")
 def show_command(
-    coin: Annotated[Coin, typer.Option("--coin", "-c")] = Coin.ETH,
+    coin: CoinOption = Coin.ETH,
     mnemonic: Annotated[str, typer.Option("--mnemonic", "-m")] = "",
     passphrase: Annotated[Union[str, None], typer.Option("--passphrase", "-p")] = None,  # noqa: UP007
-    path_prefix: Annotated[str, typer.Option("--prefix")] = "",
-    limit: Annotated[int, typer.Option("--limit", "-l")] = 10,
+    derivation_path: DerivationPathOption = None,
+    limit: LimitOption = 10,
 ) -> None:
-    show_cmd.run(ShowCmdParams(mnemonic=mnemonic, passphrase=passphrase, coin=coin, path_prefix=path_prefix, limit=limit))
+    commands.show.run(
+        ShowCmdParams(mnemonic=mnemonic, passphrase=passphrase, coin=coin, derivation_path=derivation_path, limit=limit)
+    )
 
 
 @app.command(name="check", help="Not yet implemented.")
 def check_command() -> None:
-    check_cmd.run()
+    commands.check.run()
 
 
 def version_callback(value: bool) -> None:

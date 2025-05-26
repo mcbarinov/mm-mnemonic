@@ -14,7 +14,7 @@ class Batch1CmdParams:
     batches: int
     output_dir: str
     coin: Coin
-    path_prefix: str
+    derivation_path: str | None
     limit: int
 
     def __post_init__(self) -> None:
@@ -37,7 +37,7 @@ def _process_file(batch_number: int, params: Batch1CmdParams) -> None:
         coin=params.coin,
         mnemonic=mnemonic,
         passphrase=passphrase,
-        path_prefix=params.path_prefix,
+        derivation_path=params.derivation_path,
         limit=params.limit,
     )
 

@@ -1,4 +1,4 @@
-from mm_mnemonic import eth
+from mm_mnemonic.chains import eth
 
 
 def test_derive_account(mnemonic, passphrase):

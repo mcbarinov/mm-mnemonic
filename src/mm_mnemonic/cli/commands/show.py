@@ -14,7 +14,7 @@ class ShowCmdParams:
     mnemonic: str
     passphrase: str | None
     coin: Coin
-    path_prefix: str
+    derivation_path: str | None
     limit: int
 
 
@@ -35,7 +35,7 @@ def run(params: ShowCmdParams) -> None:
         coin=params.coin,
         mnemonic=mnemonic,
         passphrase=passphrase,
-        path_prefix=params.path_prefix,
+        derivation_path=params.derivation_path,
         limit=params.limit,
     )
     typer.echo(cli_utils.make_keys_output(mnemonic, passphrase, accounts))

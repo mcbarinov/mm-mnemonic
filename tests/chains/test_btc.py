@@ -1,4 +1,4 @@
-from mm_mnemonic import btc
+from mm_mnemonic.chains import btc
 
 
 def test_derive_account(mnemonic, passphrase):

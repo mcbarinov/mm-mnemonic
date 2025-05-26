@@ -5,7 +5,7 @@ from pathlib import Path
 
 import typer
 
-from mm_mnemonic.account import Account, derive_account, get_default_path_prefix
+from mm_mnemonic.account import DerivedAccount, derive_account, get_default_derivation_path
 from mm_mnemonic.mnemonic import generate_mnemonic
 from mm_mnemonic.types import Coin
 
@@ -49,7 +49,7 @@ class Batch2CmdParams:
     batches: int
     output_dir: str
     coin: Coin
-    path_prefix: str
+    derivation_path: str | None
     words: int
     limit: int
 
@@ -66,18 +66,16 @@ def run(params: Batch2CmdParams) -> None:
 
 
 def _process_batch(batch_number: int, params: Batch2CmdParams) -> None:
-    accounts: list[Account] = []
+    accounts: list[DerivedAccount] = []
     mnemonics: list[str] = []
-    path_prefix = params.path_prefix
+    path_prefix = params.derivation_path
     if not path_prefix:
-        path_prefix = get_default_path_prefix(params.coin)
-    if not path_prefix.endswith("/"):
-        path_prefix = path_prefix + "/"
+        path_prefix = get_default_derivation_path(params.coin)
 
     for _ in range(params.limit):
         mnemonic = generate_mnemonic(params.words)
         mnemonics.append(mnemonic)
-        account = derive_account(params.coin, mnemonic, "", f"{path_prefix}0")
+        account = derive_account(params.coin, mnemonic, "", path_prefix.replace("{i}", "0"))
         accounts.append(account)
 
     # write keys file

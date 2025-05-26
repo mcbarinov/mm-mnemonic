@@ -12,7 +12,7 @@ from mm_mnemonic.types import Coin
 @dataclass
 class NewCmdParams:
     coin: Coin
-    path_prefix: str
+    derivation_path: str | None
     limit: int
     columns: str
     words: int
@@ -32,7 +32,7 @@ def run(params: NewCmdParams) -> None:
         coin=params.coin,
         mnemonic=mnemonic,
         passphrase=passphrase,
-        path_prefix=params.path_prefix,
+        derivation_path=params.derivation_path,
         limit=params.limit,
     )
     typer.echo(cli_utils.make_keys_output(mnemonic, passphrase, accounts, params.columns))

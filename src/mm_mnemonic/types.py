@@ -7,6 +7,7 @@ class Coin(str, Enum):
     BTC_TESTNET = "btc_testnet"  # bitcoin testnet
     ETH = "eth"  # ethereum
     SOL = "sol"  # solana
+    TRX = "trx"  # tron
 
 
 @unique

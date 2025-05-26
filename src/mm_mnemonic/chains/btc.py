@@ -5,18 +5,18 @@ import ecdsa
 from ecdsa.ellipticcurve import PointJacobi
 from eth_account.hdaccount import HDPath
 
-from mm_mnemonic.account import Account
+from mm_mnemonic.account import DerivedAccount
 from mm_mnemonic.mnemonic import get_seed
 
-DEFAULT_BTC_PATH_PREFIX = "m/44'/0'/0'/0"
-DEFAULT_BTC_TESTNET_PATH_PREFIX = "m/44'/1'/0'/0"
+DEFAULT_DERIVATION_PATH = "m/44'/0'/0'/0/{i}"
+DEFAULT_DERIVATION_PATH_TESTNET = "m/44'/1'/0'/0/{i}"
 
 
-def derive_account(mnemonic: str, passphrase: str, path: str, testnet: bool = False) -> Account:
+def derive_account(mnemonic: str, passphrase: str, path: str, testnet: bool = False) -> DerivedAccount:
     seed = get_seed(mnemonic, passphrase)
     private_key = HDPath(path).derive(seed)
     btc_key = Key(private_key, testnet)
-    return Account(address=btc_key.address(), private=btc_key.wif(), path=path)
+    return DerivedAccount(address=btc_key.address(), private=btc_key.wif(), path=path)
 
 
 class Key:

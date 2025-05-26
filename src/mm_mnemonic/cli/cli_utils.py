@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from mm_mnemonic.account import Account
+from mm_mnemonic.account import DerivedAccount
 from mm_mnemonic.mnemonic import get_seed
 
 
@@ -12,7 +12,7 @@ class KeysFile:
     mnemonic: str
     passphrase: str
     seed: str
-    accounts: list[Account]
+    accounts: list[DerivedAccount]
 
 
 def _has_column(columns: str, search: str) -> bool:
@@ -21,7 +21,7 @@ def _has_column(columns: str, search: str) -> bool:
     return search in columns
 
 
-def make_keys_output(mnemonic: str, passphrase: str, accounts: list[Account], columns: str = "all") -> str:
+def make_keys_output(mnemonic: str, passphrase: str, accounts: list[DerivedAccount], columns: str = "all") -> str:
     result = ""
     if _has_column(columns, "mnemonic"):
         result += f"mnemonic: {mnemonic}\n"
@@ -55,10 +55,10 @@ def parse_keys_file(data: str) -> KeysFile:
         raise ValueError("data doesn't have the 'seed: ' line")
     seed = lines[2].removeprefix("seed: ")
 
-    accounts: list[Account] = []
+    accounts: list[DerivedAccount] = []
     for line in lines[3:]:
         acc_lines = line.split()
-        acc = Account(path=acc_lines[0], address=acc_lines[1], private=acc_lines[2])
+        acc = DerivedAccount(path=acc_lines[0], address=acc_lines[1], private=acc_lines[2])
         accounts.append(acc)
 
     return KeysFile(mnemonic=mnemonic, passphrase=passphrase, seed=seed, accounts=accounts)
@@ -70,7 +70,7 @@ def get_max_file_number_suffix(parent_dir: Path) -> int | None:
         res = re.match(r".*_(\d+)\.txt$", str(f.absolute()))
         if res:
             new_value = int(res.group(1))
-            result = max(new_value, result) if result is not None else new_value  # type: ignore[call-overload]
+            result = max(new_value, result) if result is not None else new_value
     return result
 
 
