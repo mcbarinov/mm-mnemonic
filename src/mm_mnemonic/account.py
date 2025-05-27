@@ -10,6 +10,15 @@ class DerivedAccount:
     private: str
 
 
+@dataclass
+class DerivedAccounts:
+    coin: Coin
+    mnemonic: str
+    passphrase: str
+    derivation_path: str
+    accounts: list[DerivedAccount]
+
+
 def is_address_matched(address: str, search_pattern: str | None) -> bool:
     if search_pattern is None:
         return False
@@ -27,11 +36,14 @@ def is_address_matched(address: str, search_pattern: str | None) -> bool:
     return address.startswith(start_address) and address.endswith(end_address)
 
 
-def derive_accounts(coin: Coin, mnemonic: str, passphrase: str, derivation_path: str | None, limit: int) -> list[DerivedAccount]:
+def derive_accounts(coin: Coin, mnemonic: str, passphrase: str, derivation_path: str | None, limit: int) -> DerivedAccounts:
     if not derivation_path:
         derivation_path = get_default_derivation_path(coin)
 
-    return [derive_account(coin, mnemonic, passphrase, path=derivation_path.replace("{i}", str(i))) for i in range(limit)]
+    accounts = [derive_account(coin, mnemonic, passphrase, path=derivation_path.replace("{i}", str(i))) for i in range(limit)]
+    return DerivedAccounts(
+        coin=coin, mnemonic=mnemonic, passphrase=passphrase, derivation_path=derivation_path, accounts=accounts
+    )
 
 
 def derive_account(coin: Coin, mnemonic: str, passphrase: str, path: str) -> DerivedAccount:

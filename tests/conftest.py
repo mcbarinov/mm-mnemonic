@@ -1,5 +1,4 @@
 import secrets
-import shutil
 import string
 from pathlib import Path
 
@@ -25,17 +24,6 @@ def passphrase() -> str:
 @pytest.fixture
 def seed() -> str:
     return "3e27ae260f781346f4a747634dc8d78081ecd64a6b2dc9181a13726fd9643d30faec843fedc49df02c4f869881fadec150b156d67d092e5cf3b9972905407478"  # noqa: E501
-
-
-@pytest.fixture
-def output_dir() -> Path:
-    rnd = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
-    output_dir = Path(f"/tmp/mm_mnemonic.py_random_output_dir_{rnd}")
-    try:
-        output_dir.mkdir(parents=True, exist_ok=False)
-        yield output_dir
-    finally:
-        shutil.rmtree(output_dir)
 
 
 def create_random_output_dir() -> Path:

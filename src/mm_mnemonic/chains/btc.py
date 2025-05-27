@@ -34,12 +34,12 @@ class Key:
         out1 = _sha256(self.pubkey())
         out2 = _ripemd160(out1)
         # Base-58 encoding with a checksum
-        version = bytearray.fromhex("6f") if self.testnet else bytearray.fromhex("00")
+        version = bytes.fromhex("6f") if self.testnet else bytes.fromhex("00")
         checksum = _base58_cksum(version + out2)
         return base58.b58encode(version + out2 + checksum).decode()
 
     def wif(self, compressed_wif: bool = True) -> str:
-        version = bytearray.fromhex("ef") if self.testnet else bytearray.fromhex("80")
+        version = bytes.fromhex("ef") if self.testnet else bytes.fromhex("80")
         private_key_with_version = version + self.private_key
         if compressed_wif:
             private_key_with_version = version + self.private_key + b"\x01"

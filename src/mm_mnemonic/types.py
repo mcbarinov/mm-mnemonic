@@ -1,19 +1,10 @@
-from enum import Enum, unique
+from enum import StrEnum, unique
 
 
 @unique
-class Coin(str, Enum):
-    BTC = "btc"  # bitcoin
-    BTC_TESTNET = "btc_testnet"  # bitcoin testnet
-    ETH = "eth"  # ethereum
-    SOL = "sol"  # solana
-    TRX = "trx"  # tron
-
-
-@unique
-class MnemonicWords(int, Enum):
-    TWELVE = 12
-    FIFTEEN = 15
-    EIGHTEEN = 18
-    TWENTY_ONE = 21
-    TWENTY_FOUR = 24
+class Coin(StrEnum):
+    BTC = "BTC"  # bitcoin
+    BTC_TESTNET = "BTC_TESTNET"  # bitcoin testnet
+    ETH = "ETH"  # ethereum
+    SOL = "SOL"  # solana
+    TRX = "TRX"  # tron
