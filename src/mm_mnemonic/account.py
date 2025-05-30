@@ -25,15 +25,30 @@ def is_address_matched(address: str, search_pattern: str | None) -> bool:
     address = address.lower()
     search_pattern = search_pattern.lower()
 
-    if search_pattern.count("*") == 0:
+    # No wildcards - exact match
+    if "*" not in search_pattern:
         return address == search_pattern
-    if search_pattern.startswith("*"):
+
+    # Pattern like *suffix
+    if search_pattern.startswith("*") and not search_pattern.endswith("*"):
         return address.endswith(search_pattern.removeprefix("*"))
-    if search_pattern.endswith("*"):
+
+    # Pattern like prefix*
+    if search_pattern.endswith("*") and not search_pattern.startswith("*"):
         return address.startswith(search_pattern.removesuffix("*"))
 
-    start_address, end_address = search_pattern.split("*")
-    return address.startswith(start_address) and address.endswith(end_address)
+    # Pattern like *contains*
+    if search_pattern.startswith("*") and search_pattern.endswith("*"):
+        contains_part = search_pattern.removeprefix("*").removesuffix("*")
+        return contains_part in address
+
+    # Pattern like prefix*suffix (one * in the middle)
+    if search_pattern.count("*") == 1:
+        start_part, end_part = search_pattern.split("*")
+        return address.startswith(start_part) and address.endswith(end_part)
+
+    # Multiple * - not supported for now
+    return False
 
 
 def derive_accounts(coin: Coin, mnemonic: str, passphrase: str, derivation_path: str | None, limit: int) -> DerivedAccounts:

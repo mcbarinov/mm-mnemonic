@@ -87,9 +87,101 @@ def derive_command(
     )
 
 
-@app.command(name="search", help="Search addresses in the derived accounts")
-def search_command() -> None:
-    raise typer.BadParameter("not implemented yet")
+@app.command(name="search")
+def search_command(
+    addresses: Annotated[
+        list[str] | None, typer.Argument(help="Address patterns to search for (supports wildcards: 0x1234*, *abcd, *1234*)")
+    ] = None,
+    coin: Annotated[Coin, typer.Option("--coin", "-c", help="Cryptocurrency to search addresses for")] = Coin.ETH,
+    addresses_file: Annotated[
+        Path | None, typer.Option("--addresses-file", "-f", help="File containing address patterns (one per line)")
+    ] = None,
+    mnemonic: Annotated[
+        str | None,
+        typer.Option("--mnemonic", "-m", help="BIP39 mnemonic phrase (12-24 words). If not provided, will prompt interactively."),
+    ] = None,
+    passphrase: Annotated[
+        str | None,
+        typer.Option(
+            "--passphrase",
+            "-p",
+            help="BIP39 passphrase (optional, use with --mnemonic). If not provided, will prompt interactively.",
+        ),
+    ] = None,
+    derivation_path: Annotated[
+        str | None,
+        typer.Option(
+            "--derivation-path",
+            help="Custom derivation path template (e.g., m/44'/0'/0'/0/{i}). Default paths used if not specified.",
+        ),
+    ] = None,
+    limit: Annotated[int, typer.Option("--limit", "-l", help="Maximum number of derivation paths to check")] = 1000,
+) -> None:
+    """
+    Search for specific addresses in derived accounts from BIP39 mnemonic.
+
+    Interactively prompts for mnemonic and passphrase, then searches through
+    derived accounts to find matches for the specified address patterns.
+
+    WILDCARD PATTERNS:
+
+    0x1234*      Address starts with '0x1234'
+
+    *abcd        Address ends with 'abcd'
+
+    *1234*       Address contains '1234' anywhere
+
+    0x1234abcd   Exact address match (no wildcards)
+
+
+    USAGE EXAMPLES:
+
+    # Search for specific addresses
+    mm-mnemonic search 0x1234abcd 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+
+    # Search with wildcards
+    mm-mnemonic search 0x1234* *abcd bc1q*
+
+    # Search from file
+    mm-mnemonic search --addresses-file addresses.txt
+
+    # Combine arguments and file
+    mm-mnemonic search 0x1234* --addresses-file more-addresses.txt
+
+    # Search Bitcoin addresses with higher limit
+    mm-mnemonic search 1A1zP1eP* --coin BTC --limit 5000
+
+    # Custom derivation path
+    mm-mnemonic search 0x1234* --derivation-path "m/44'/60'/0'/0/{i}"
+
+
+    ADDRESS FILE FORMAT:
+
+    One address pattern per line, empty lines and lines starting with # are ignored:
+
+        # My lost addresses
+        0x1234abcd*
+        *5678efgh
+        1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+
+
+    SUPPORTED COINS: BTC, BTC_TESTNET, ETH, SOL, TRX
+    """
+    # Convert None to empty list for addresses
+    if addresses is None:
+        addresses = []
+
+    commands.search.run(
+        commands.search.Params(
+            coin=coin,
+            addresses=addresses,
+            addresses_file=addresses_file,
+            mnemonic=mnemonic,
+            passphrase=passphrase,
+            derivation_path=derivation_path,
+            limit=limit,
+        )
+    )
 
 
 def version_callback(value: bool) -> None:
