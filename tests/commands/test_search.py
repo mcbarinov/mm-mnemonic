@@ -38,7 +38,7 @@ class TestSearchWithMnemonic:
         # Known first address from test mnemonic
         target_address = "0xEd5308054d1d0fd50d6340f3aF14D62DE67AD537"
 
-        result = runner.invoke(app, ["search", target_address, "--mnemonic", mnemonic, "--limit", "5"])
+        result = runner.invoke(app, ["search", target_address, "--mnemonic", mnemonic, "--limit", "5", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Found 1 matches:" in result.stdout
@@ -47,7 +47,7 @@ class TestSearchWithMnemonic:
 
     def test_search_wildcard_prefix(self, runner: CliRunner, mnemonic: str) -> None:
         """Test searching with prefix wildcard."""
-        result = runner.invoke(app, ["search", "0xEd5308*", "--mnemonic", mnemonic, "--limit", "2"])
+        result = runner.invoke(app, ["search", "0xEd5308*", "--mnemonic", mnemonic, "--limit", "2", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Found match for '0xEd5308*'" in result.stdout
@@ -56,7 +56,7 @@ class TestSearchWithMnemonic:
 
     def test_search_wildcard_suffix(self, runner: CliRunner, mnemonic: str) -> None:
         """Test searching with suffix wildcard."""
-        result = runner.invoke(app, ["search", "*AD537", "--mnemonic", mnemonic, "--limit", "2"])
+        result = runner.invoke(app, ["search", "*AD537", "--mnemonic", mnemonic, "--limit", "2", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Found match for '*AD537'" in result.stdout
@@ -64,7 +64,7 @@ class TestSearchWithMnemonic:
 
     def test_search_wildcard_contains(self, runner: CliRunner, mnemonic: str) -> None:
         """Test searching with contains wildcard."""
-        result = runner.invoke(app, ["search", "*0fd50*", "--mnemonic", mnemonic, "--limit", "2"])
+        result = runner.invoke(app, ["search", "*0fd50*", "--mnemonic", mnemonic, "--limit", "2", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Found match for '*0fd50*'" in result.stdout
@@ -72,14 +72,16 @@ class TestSearchWithMnemonic:
 
     def test_search_no_matches(self, runner: CliRunner, mnemonic: str) -> None:
         """Test search with no matches found."""
-        result = runner.invoke(app, ["search", "0xnonexistent*", "--mnemonic", mnemonic, "--limit", "5"])
+        result = runner.invoke(app, ["search", "0xnonexistent*", "--mnemonic", mnemonic, "--limit", "5", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "No matches found." in result.stdout
 
     def test_search_multiple_patterns(self, runner: CliRunner, mnemonic: str) -> None:
         """Test search with multiple address patterns."""
-        result = runner.invoke(app, ["search", "0xEd5308*", "*44fC", "--mnemonic", mnemonic, "--limit", "5"])
+        result = runner.invoke(
+            app, ["search", "0xEd5308*", "*44fC", "--mnemonic", mnemonic, "--limit", "5", "--allow-internet-risk"]
+        )
 
         assert result.exit_code == 0
         # Should find both patterns
@@ -88,7 +90,10 @@ class TestSearchWithMnemonic:
 
     def test_search_with_passphrase(self, runner: CliRunner, mnemonic: str) -> None:
         """Test search with passphrase."""
-        result = runner.invoke(app, ["search", "0x9858*", "--mnemonic", mnemonic, "--passphrase", "testpass", "--limit", "5"])
+        result = runner.invoke(
+            app,
+            ["search", "0x9858*", "--mnemonic", mnemonic, "--passphrase", "testpass", "--limit", "5", "--allow-internet-risk"],
+        )
 
         assert result.exit_code == 0
         # With passphrase, addresses will be different
@@ -97,7 +102,9 @@ class TestSearchWithMnemonic:
     def test_search_different_coins(self, runner: CliRunner, mnemonic: str) -> None:
         """Test search with different cryptocurrencies."""
         for coin in ["BTC", "ETH", "SOL", "TRX"]:
-            result = runner.invoke(app, ["search", "*123*", "--mnemonic", mnemonic, "--coin", coin, "--limit", "3"])
+            result = runner.invoke(
+                app, ["search", "*123*", "--mnemonic", mnemonic, "--coin", coin, "--limit", "3", "--allow-internet-risk"]
+            )
 
             assert result.exit_code == 0
             assert f"Coin: {coin}" in result.stdout
@@ -105,14 +112,17 @@ class TestSearchWithMnemonic:
     def test_search_custom_derivation_path(self, runner: CliRunner, mnemonic: str) -> None:
         """Test search with custom derivation path."""
         custom_path = "m/44'/60'/1'/0/{i}"
-        result = runner.invoke(app, ["search", "0x*", "--mnemonic", mnemonic, "--derivation-path", custom_path, "--limit", "2"])
+        result = runner.invoke(
+            app,
+            ["search", "0x*", "--mnemonic", mnemonic, "--derivation-path", custom_path, "--limit", "2", "--allow-internet-risk"],
+        )
 
         assert result.exit_code == 0
         assert custom_path in result.stdout
 
     def test_search_invalid_mnemonic(self, runner: CliRunner) -> None:
         """Test search with invalid mnemonic."""
-        result = runner.invoke(app, ["search", "0x123*", "--mnemonic", "invalid mnemonic phrase"])
+        result = runner.invoke(app, ["search", "0x123*", "--mnemonic", "invalid mnemonic phrase", "--allow-internet-risk"])
 
         assert result.exit_code == 1
         assert "Invalid mnemonic phrase" in result.stdout
@@ -126,7 +136,10 @@ class TestSearchWithFile:
         addresses_file = tmp_path / "addresses.txt"
         addresses_file.write_text("0xEd5308*\n*44fC\n# Comment line\n\n*nonexistent*")
 
-        result = runner.invoke(app, ["search", "--addresses-file", str(addresses_file), "--mnemonic", mnemonic, "--limit", "5"])
+        result = runner.invoke(
+            app,
+            ["search", "--addresses-file", str(addresses_file), "--mnemonic", mnemonic, "--limit", "5", "--allow-internet-risk"],
+        )
 
         assert result.exit_code == 0
         assert "Found 2 matches:" in result.stdout
@@ -139,7 +152,18 @@ class TestSearchWithFile:
         addresses_file.write_text("0xEd5308*")
 
         result = runner.invoke(
-            app, ["search", "*44fC", "--addresses-file", str(addresses_file), "--mnemonic", mnemonic, "--limit", "5"]
+            app,
+            [
+                "search",
+                "*44fC",
+                "--addresses-file",
+                str(addresses_file),
+                "--mnemonic",
+                mnemonic,
+                "--limit",
+                "5",
+                "--allow-internet-risk",
+            ],
         )
 
         assert result.exit_code == 0
@@ -149,7 +173,9 @@ class TestSearchWithFile:
 
     def test_search_file_not_found(self, runner: CliRunner, mnemonic: str) -> None:
         """Test search with non-existent addresses file."""
-        result = runner.invoke(app, ["search", "--addresses-file", "/nonexistent/file.txt", "--mnemonic", mnemonic])
+        result = runner.invoke(
+            app, ["search", "--addresses-file", "/nonexistent/file.txt", "--mnemonic", mnemonic, "--allow-internet-risk"]
+        )
 
         assert result.exit_code == 1
         assert "Addresses file not found" in result.stdout
@@ -159,7 +185,9 @@ class TestSearchWithFile:
         addresses_file = tmp_path / "empty.txt"
         addresses_file.write_text("# Only comments\n\n  \n")
 
-        result = runner.invoke(app, ["search", "--addresses-file", str(addresses_file), "--mnemonic", mnemonic])
+        result = runner.invoke(
+            app, ["search", "--addresses-file", str(addresses_file), "--mnemonic", mnemonic, "--allow-internet-risk"]
+        )
 
         assert result.exit_code == 1
         assert "No address patterns found to search for." in result.stdout
@@ -174,7 +202,7 @@ class TestSearchInteractive:
         test_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
         mock_typer_prompt.side_effect = [test_mnemonic, ""]
 
-        result = runner.invoke(app, ["search", "0x9858*", "--limit", "1"])
+        result = runner.invoke(app, ["search", "0x9858*", "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Found match for '0x9858*'" in result.stdout
@@ -185,7 +213,7 @@ class TestSearchInteractive:
         test_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
         mock_typer_prompt.side_effect = ["invalid mnemonic", test_mnemonic, ""]
 
-        result = runner.invoke(app, ["search", "0x9858*", "--limit", "1"])
+        result = runner.invoke(app, ["search", "0x9858*", "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Invalid mnemonic" in result.stdout
@@ -205,6 +233,7 @@ class TestSearchParams:
             passphrase=None,
             derivation_path=None,
             limit=1000,
+            allow_internet_risk=False,
         )
 
         with pytest.raises(Exception) as exc_info:
@@ -222,6 +251,7 @@ class TestSearchParams:
             passphrase=None,
             derivation_path=None,
             limit=1000,
+            allow_internet_risk=False,
         )
 
         # Should not raise exception
@@ -240,6 +270,7 @@ class TestSearchParams:
             passphrase=None,
             derivation_path=None,
             limit=1000,
+            allow_internet_risk=False,
         )
 
         # Should not raise exception
@@ -253,7 +284,7 @@ class TestSearchWildcardPatterns:
         """Test exact address matching without wildcards."""
         exact_address = "0xEd5308054d1d0fd50d6340f3aF14D62DE67AD537"
 
-        result = runner.invoke(app, ["search", exact_address, "--mnemonic", mnemonic, "--limit", "2"])
+        result = runner.invoke(app, ["search", exact_address, "--mnemonic", mnemonic, "--limit", "2", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert exact_address in result.stdout
@@ -269,6 +300,7 @@ class TestSearchWildcardPatterns:
                 mnemonic,
                 "--limit",
                 "2",
+                "--allow-internet-risk",
             ],
         )
 
@@ -286,6 +318,7 @@ class TestSearchWildcardPatterns:
                 mnemonic,
                 "--limit",
                 "3",
+                "--allow-internet-risk",
             ],
         )
 

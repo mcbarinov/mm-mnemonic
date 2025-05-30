@@ -7,7 +7,7 @@ import typer
 from mm_mnemonic import commands
 from mm_mnemonic.types import Coin
 
-app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False, add_completion=False)
+app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
 
 
 def mnemonic_words_callback(value: int) -> int:
@@ -54,6 +54,13 @@ def derive_command(
         bool,
         typer.Option("--encrypt", "-e", help="Encrypt saved keys with AES-256-CBC (requires --output-dir)"),
     ] = False,
+    # Security options
+    allow_internet_risk: Annotated[
+        bool,
+        typer.Option(
+            "--allow-internet-risk", help="Allow running with internet connection (SECURITY RISK: your mnemonic may be exposed)"
+        ),
+    ] = False,
 ) -> None:
     """
     Derive cryptocurrency accounts from BIP39 mnemonic phrases.
@@ -69,6 +76,11 @@ def derive_command(
     --mnemonic="..." --passphrase="..." Use existing credentials
 
     SUPPORTED COINS: BTC, BTC_TESTNET, ETH, SOL, TRX
+
+    SECURITY WARNING:
+    This command handles sensitive cryptographic material (mnemonic phrases).
+    For maximum security, run this command on an air-gapped machine without
+    internet connection. Use --allow-internet-risk to bypass this check.
     """
     commands.derive.run(
         commands.derive.Params(
@@ -83,6 +95,7 @@ def derive_command(
             words=words,
             output_dir=output_dir,
             encrypt=encrypt,
+            allow_internet_risk=allow_internet_risk,
         )
     )
 
@@ -116,6 +129,13 @@ def search_command(
         ),
     ] = None,
     limit: Annotated[int, typer.Option("--limit", "-l", help="Maximum number of derivation paths to check")] = 1000,
+    # Security options
+    allow_internet_risk: Annotated[
+        bool,
+        typer.Option(
+            "--allow-internet-risk", help="Allow running with internet connection (SECURITY RISK: your mnemonic may be exposed)"
+        ),
+    ] = False,
 ) -> None:
     """
     Search for specific addresses in derived accounts from BIP39 mnemonic.
@@ -166,6 +186,11 @@ def search_command(
 
 
     SUPPORTED COINS: BTC, BTC_TESTNET, ETH, SOL, TRX
+
+    SECURITY WARNING:
+    This command handles sensitive cryptographic material (mnemonic phrases).
+    For maximum security, run this command on an air-gapped machine without
+    internet connection. Use --allow-internet-risk to bypass this check.
     """
     # Convert None to empty list for addresses
     if addresses is None:
@@ -180,6 +205,7 @@ def search_command(
             passphrase=passphrase,
             derivation_path=derivation_path,
             limit=limit,
+            allow_internet_risk=allow_internet_risk,
         )
     )
 

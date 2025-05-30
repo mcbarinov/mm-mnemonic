@@ -1,11 +1,15 @@
+"""Tests for derive command."""
+
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import tomlkit
+import typer
 from typer.testing import CliRunner
 
 from mm_mnemonic.cli import app
+from mm_mnemonic.commands import derive
 from mm_mnemonic.commands.derive import Params
 from mm_mnemonic.types import Coin
 
@@ -15,7 +19,7 @@ class TestDeriveDefaults:
 
     def test_shows_examples_by_default(self, runner: CliRunner) -> None:
         """When no parameters provided, should show usage examples."""
-        result = runner.invoke(app, ["derive"])
+        result = runner.invoke(app, ["derive", "--allow-internet-risk"])
 
         assert result.exit_code == 1  # Main task (deriving accounts) was not completed
         assert "USAGE EXAMPLES:" in result.stdout
@@ -33,7 +37,7 @@ class TestDeriveGenerate:
         """Test basic generate mode with real generation."""
         mock_typer_prompt.return_value = "test123"
 
-        result = runner.invoke(app, ["derive", "--generate", "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--generate", "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Coin: ETH" in result.stdout
@@ -51,7 +55,7 @@ class TestDeriveGenerate:
         """Test generate with custom word count."""
         mock_typer_prompt.return_value = ""
 
-        result = runner.invoke(app, ["derive", "--generate", "--words", "12", "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--generate", "--words", "12", "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
 
@@ -63,7 +67,7 @@ class TestDeriveGenerate:
 
     def test_generate_with_auto_passphrase(self, runner: CliRunner) -> None:
         """Test generate with automatic passphrase generation."""
-        result = runner.invoke(app, ["derive", "--generate", "--generate-passphrase", "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--generate", "--generate-passphrase", "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
 
@@ -78,8 +82,8 @@ class TestDeriveGenerate:
         """Test that different generations produce different results."""
         mock_typer_prompt.return_value = "same_pass"
 
-        result1 = runner.invoke(app, ["derive", "--generate", "--limit", "1"])
-        result2 = runner.invoke(app, ["derive", "--generate", "--limit", "1"])
+        result1 = runner.invoke(app, ["derive", "--generate", "--limit", "1", "--allow-internet-risk"])
+        result2 = runner.invoke(app, ["derive", "--generate", "--limit", "1", "--allow-internet-risk"])
 
         assert result1.exit_code == 0
         assert result2.exit_code == 0
@@ -92,7 +96,7 @@ class TestDeriveGenerate:
         mock_typer_prompt.return_value = ""
 
         for coin in ["BTC", "ETH", "SOL", "TRX"]:
-            result = runner.invoke(app, ["derive", "--generate", "--coin", coin, "--limit", "1"])
+            result = runner.invoke(app, ["derive", "--generate", "--coin", coin, "--limit", "1", "--allow-internet-risk"])
             assert result.exit_code == 0
             assert f"Coin: {coin}" in result.stdout
 
@@ -102,7 +106,7 @@ class TestDeriveMnemonic:
 
     def test_mnemonic_basic(self, runner: CliRunner, mnemonic: str) -> None:
         """Test basic mnemonic mode with known mnemonic."""
-        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert "Coin: ETH" in result.stdout
@@ -111,7 +115,9 @@ class TestDeriveMnemonic:
 
     def test_mnemonic_with_passphrase(self, runner: CliRunner, mnemonic: str, passphrase: str) -> None:
         """Test mnemonic with passphrase."""
-        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--passphrase", passphrase, "--limit", "1"])
+        result = runner.invoke(
+            app, ["derive", "--mnemonic", mnemonic, "--passphrase", passphrase, "--limit", "1", "--allow-internet-risk"]
+        )
 
         assert result.exit_code == 0
         assert mnemonic in result.stdout
@@ -121,8 +127,8 @@ class TestDeriveMnemonic:
         """Test that same mnemonic produces same results."""
         test_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
-        result1 = runner.invoke(app, ["derive", "--mnemonic", test_mnemonic, "--limit", "2"])
-        result2 = runner.invoke(app, ["derive", "--mnemonic", test_mnemonic, "--limit", "2"])
+        result1 = runner.invoke(app, ["derive", "--mnemonic", test_mnemonic, "--limit", "2", "--allow-internet-risk"])
+        result2 = runner.invoke(app, ["derive", "--mnemonic", test_mnemonic, "--limit", "2", "--allow-internet-risk"])
 
         assert result1.exit_code == 0
         assert result2.exit_code == 0
@@ -133,8 +139,8 @@ class TestDeriveMnemonic:
         mnemonic1 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
         mnemonic2 = "legal winner thank year wave sausage worth useful legal winner thank yellow"
 
-        result1 = runner.invoke(app, ["derive", "--mnemonic", mnemonic1, "--limit", "1"])
-        result2 = runner.invoke(app, ["derive", "--mnemonic", mnemonic2, "--limit", "1"])
+        result1 = runner.invoke(app, ["derive", "--mnemonic", mnemonic1, "--limit", "1", "--allow-internet-risk"])
+        result2 = runner.invoke(app, ["derive", "--mnemonic", mnemonic2, "--limit", "1", "--allow-internet-risk"])
 
         assert result1.exit_code == 0
         assert result2.exit_code == 0
@@ -143,7 +149,9 @@ class TestDeriveMnemonic:
     def test_mnemonic_with_custom_derivation_path(self, runner: CliRunner, mnemonic: str) -> None:
         """Test mnemonic with custom derivation path."""
         custom_path = "m/44'/3'/0'/0/{i}"
-        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--derivation-path", custom_path, "--limit", "1"])
+        result = runner.invoke(
+            app, ["derive", "--mnemonic", mnemonic, "--derivation-path", custom_path, "--limit", "1", "--allow-internet-risk"]
+        )
 
         assert result.exit_code == 0
         assert custom_path in result.stdout
@@ -157,7 +165,7 @@ class TestDerivePrompt:
         """Test basic prompt mode with valid mnemonic."""
         mock_typer_prompt.side_effect = [mnemonic, "test_passphrase"]
 
-        result = runner.invoke(app, ["derive", "--prompt", "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--prompt", "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert mnemonic in result.stdout
@@ -169,7 +177,7 @@ class TestDerivePrompt:
         # First invalid mnemonic, then valid one
         mock_typer_prompt.side_effect = ["invalid mnemonic", mnemonic, "test_pass"]
 
-        result = runner.invoke(app, ["derive", "--prompt", "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--prompt", "--limit", "1", "--allow-internet-risk"])
 
         assert result.exit_code == 0
         assert mnemonic in result.stdout
@@ -180,7 +188,9 @@ class TestDeriveFileOutput:
 
     def test_save_to_file_basic(self, runner: CliRunner, mnemonic: str, tmp_path: Path) -> None:
         """Test saving accounts to files."""
-        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--output-dir", str(tmp_path), "--limit", "2"])
+        result = runner.invoke(
+            app, ["derive", "--mnemonic", mnemonic, "--output-dir", str(tmp_path), "--limit", "2", "--allow-internet-risk"]
+        )
 
         assert result.exit_code == 0
 
@@ -207,7 +217,18 @@ class TestDeriveFileOutput:
         mock_typer_prompt.return_value = "encryption_password"
 
         result = runner.invoke(
-            app, ["derive", "--mnemonic", mnemonic, "--output-dir", str(tmp_path), "--encrypt", "--limit", "1"]
+            app,
+            [
+                "derive",
+                "--mnemonic",
+                mnemonic,
+                "--output-dir",
+                str(tmp_path),
+                "--encrypt",
+                "--limit",
+                "1",
+                "--allow-internet-risk",
+            ],
         )
 
         assert result.exit_code == 0
@@ -220,7 +241,19 @@ class TestDeriveFileOutput:
     def test_file_output_hides_sensitive_info(self, runner: CliRunner, mnemonic: str, passphrase: str, tmp_path: Path) -> None:
         """Test that sensitive information is hidden when saving to files."""
         result = runner.invoke(
-            app, ["derive", "--mnemonic", mnemonic, "--passphrase", passphrase, "--output-dir", str(tmp_path), "--limit", "1"]
+            app,
+            [
+                "derive",
+                "--mnemonic",
+                mnemonic,
+                "--passphrase",
+                passphrase,
+                "--output-dir",
+                str(tmp_path),
+                "--limit",
+                "1",
+                "--allow-internet-risk",
+            ],
         )
 
         assert result.exit_code == 0
@@ -234,7 +267,9 @@ class TestDeriveFileOutput:
 
     def test_file_output_no_passphrase(self, runner: CliRunner, mnemonic: str, tmp_path: Path) -> None:
         """Test file output display when no passphrase is used."""
-        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--output-dir", str(tmp_path), "--limit", "1"])
+        result = runner.invoke(
+            app, ["derive", "--mnemonic", mnemonic, "--output-dir", str(tmp_path), "--limit", "1", "--allow-internet-risk"]
+        )
 
         assert result.exit_code == 0
         assert "Passphrase: no" in result.stdout
@@ -302,6 +337,7 @@ class TestDeriveParams:
             limit=10,
             output_dir=None,
             encrypt=True,
+            allow_internet_risk=False,
         )
 
         with pytest.raises(Exception) as exc_info:
@@ -322,6 +358,7 @@ class TestDeriveParams:
             limit=10,
             output_dir=None,
             encrypt=False,
+            allow_internet_risk=False,
         )
 
         with pytest.raises(Exception) as exc_info:
@@ -350,18 +387,18 @@ class TestDeriveEdgeCases:
         test_dir.mkdir()
         (test_dir / "existing_file.txt").write_text("test")
 
-        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--output-dir", str(test_dir)])
+        result = runner.invoke(app, ["derive", "--mnemonic", mnemonic, "--output-dir", str(test_dir), "--allow-internet-risk"])
         assert result.exit_code == 1
         assert "is not empty" in result.stdout
 
     def test_invalid_mnemonic(self, runner: CliRunner) -> None:
         """Test that invalid mnemonic is rejected."""
-        result = runner.invoke(app, ["derive", "--mnemonic", "invalid mnemonic phrase", "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--mnemonic", "invalid mnemonic phrase", "--limit", "1", "--allow-internet-risk"])
         assert result.exit_code == 1  # Should fail validation
 
     def test_empty_mnemonic(self, runner: CliRunner) -> None:
         """Test that empty mnemonic is rejected."""
-        result = runner.invoke(app, ["derive", "--mnemonic", "", "--limit", "1"])
+        result = runner.invoke(app, ["derive", "--mnemonic", "", "--limit", "1", "--allow-internet-risk"])
         assert result.exit_code == 1
 
 
@@ -378,7 +415,19 @@ class TestDeriveIntegration:
         mock_passphrase_prompt.return_value = "encryption_password"
 
         result = runner.invoke(
-            app, ["derive", "--generate", "--coin", "BTC", "--limit", "3", "--output-dir", str(tmp_path), "--encrypt"]
+            app,
+            [
+                "derive",
+                "--generate",
+                "--coin",
+                "BTC",
+                "--limit",
+                "3",
+                "--output-dir",
+                str(tmp_path),
+                "--encrypt",
+                "--allow-internet-risk",
+            ],
         )
 
         assert result.exit_code == 0
@@ -397,10 +446,34 @@ class TestDeriveIntegration:
         test_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
         result1 = runner.invoke(
-            app, ["derive", "--mnemonic", test_mnemonic, "--passphrase", "test", "--coin", "ETH", "--limit", "2"]
+            app,
+            [
+                "derive",
+                "--mnemonic",
+                test_mnemonic,
+                "--passphrase",
+                "test",
+                "--coin",
+                "ETH",
+                "--limit",
+                "2",
+                "--allow-internet-risk",
+            ],
         )
         result2 = runner.invoke(
-            app, ["derive", "--mnemonic", test_mnemonic, "--passphrase", "test", "--coin", "ETH", "--limit", "2"]
+            app,
+            [
+                "derive",
+                "--mnemonic",
+                test_mnemonic,
+                "--passphrase",
+                "test",
+                "--coin",
+                "ETH",
+                "--limit",
+                "2",
+                "--allow-internet-risk",
+            ],
         )
 
         assert result1.exit_code == 0
@@ -411,9 +484,128 @@ class TestDeriveIntegration:
         """Test that same mnemonic produces different addresses for different coins."""
         test_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
-        eth_result = runner.invoke(app, ["derive", "--mnemonic", test_mnemonic, "--coin", "ETH", "--limit", "1"])
-        btc_result = runner.invoke(app, ["derive", "--mnemonic", test_mnemonic, "--coin", "BTC", "--limit", "1"])
+        eth_result = runner.invoke(
+            app, ["derive", "--mnemonic", test_mnemonic, "--coin", "ETH", "--limit", "1", "--allow-internet-risk"]
+        )
+        btc_result = runner.invoke(
+            app, ["derive", "--mnemonic", test_mnemonic, "--coin", "BTC", "--limit", "1", "--allow-internet-risk"]
+        )
 
         assert eth_result.exit_code == 0
         assert btc_result.exit_code == 0
         assert eth_result.stdout != btc_result.stdout  # Different coins should produce different addresses
+
+
+@patch("mm_mnemonic.commands.derive.has_internet_connection")
+class TestNetworkSecurity:
+    """Test network security checks."""
+
+    def test_blocks_when_internet_detected_and_flag_not_set(self, mock_internet: MagicMock) -> None:
+        """Test that command blocks when internet is detected and flag is not set."""
+        mock_internet.return_value = True
+
+        params = Params(
+            coin=Coin.ETH,
+            mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            passphrase="",
+            generate=False,
+            generate_passphrase=False,
+            prompt=False,
+            words=24,
+            derivation_path=None,
+            limit=10,
+            output_dir=None,
+            encrypt=False,
+            allow_internet_risk=False,
+        )
+
+        with pytest.raises(typer.Exit) as exc_info:
+            derive.run(params)
+
+        assert exc_info.value.exit_code == 1
+
+    def test_allows_when_internet_detected_and_flag_set(self, mock_internet: MagicMock) -> None:
+        """Test that command proceeds with warning when internet is detected and flag is set."""
+        mock_internet.return_value = True
+
+        params = Params(
+            coin=Coin.ETH,
+            mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            passphrase="",
+            generate=False,
+            generate_passphrase=False,
+            prompt=False,
+            words=24,
+            derivation_path=None,
+            limit=1,
+            output_dir=None,
+            encrypt=False,
+            allow_internet_risk=True,
+        )
+
+        # Should not raise an exception
+        with (
+            patch("mm_mnemonic.commands.derive.derive_accounts") as mock_derive,
+            patch("mm_mnemonic.commands.derive.output.print_derived_accounts") as mock_print,
+        ):
+            mock_derive.return_value = []
+            derive.run(params)
+
+        mock_derive.assert_called_once()
+        mock_print.assert_called_once()
+
+    def test_allows_when_no_internet(self, mock_internet: MagicMock) -> None:
+        """Test that command proceeds normally when no internet is detected."""
+        mock_internet.return_value = False
+
+        params = Params(
+            coin=Coin.ETH,
+            mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            passphrase="",
+            generate=False,
+            generate_passphrase=False,
+            prompt=False,
+            words=24,
+            derivation_path=None,
+            limit=1,
+            output_dir=None,
+            encrypt=False,
+            allow_internet_risk=False,
+        )
+
+        # Should not raise an exception even without flag
+        with (
+            patch("mm_mnemonic.commands.derive.derive_accounts") as mock_derive,
+            patch("mm_mnemonic.commands.derive.output.print_derived_accounts") as mock_print,
+        ):
+            mock_derive.return_value = []
+            derive.run(params)
+
+        mock_derive.assert_called_once()
+        mock_print.assert_called_once()
+
+
+class TestParams:
+    """Test Params validation."""
+
+    def test_allow_internet_risk_field_exists(self) -> None:
+        """Test that allow_internet_risk field exists and can be set."""
+        params = Params(
+            coin=Coin.ETH,
+            mnemonic="test",
+            passphrase="",
+            generate=False,
+            generate_passphrase=False,
+            prompt=False,
+            words=24,
+            derivation_path=None,
+            limit=10,
+            output_dir=None,
+            encrypt=False,
+            allow_internet_risk=True,
+        )
+
+        assert params.allow_internet_risk is True
+
+        params.allow_internet_risk = False
+        assert params.allow_internet_risk is False

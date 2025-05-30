@@ -3,12 +3,37 @@ from pathlib import Path
 
 import typer
 from pydantic import BaseModel
+from rich.console import Console
 
 from mm_mnemonic import output
 from mm_mnemonic.account import derive_accounts
 from mm_mnemonic.mnemonic import generate_mnemonic, is_valid_mnemonic
+from mm_mnemonic.network import has_internet_connection
 from mm_mnemonic.passphrase import generate_passphrase, prompt_encryption_password
 from mm_mnemonic.types import Coin
+
+
+def _check_network_security(allow_internet_risk: bool) -> None:
+    """Check network security and show warnings."""
+    if has_internet_connection():
+        console = Console()
+
+        if not allow_internet_risk:
+            console.print()
+            console.print("🚨 [bold red]SECURITY WARNING: Internet connection detected![/bold red]")
+            console.print()
+            console.print("Your mnemonic and private keys may be exposed to potential attacks.")
+            console.print("For maximum security, disconnect from the internet before running this command.")
+            console.print()
+            console.print("To proceed anyway (NOT recommended), use: [bold cyan]--allow-internet-risk[/bold cyan]")
+            console.print()
+            raise typer.Exit(1)
+
+        console.print()
+        console.print("⚠️  [bold yellow]WARNING: Running with internet connection![/bold yellow]")
+        console.print("Your mnemonic may be exposed to potential attacks.")
+        console.print("For maximum security, disconnect from internet.")
+        console.print()
 
 
 class Params(BaseModel):
@@ -23,6 +48,7 @@ class Params(BaseModel):
     limit: int
     output_dir: Path | None
     encrypt: bool  # Encrypt keys.toml in output_dir
+    allow_internet_risk: bool  # Allow running with internet connection
 
     def validate_params(self) -> None:
         # Output validation
@@ -61,6 +87,10 @@ class Params(BaseModel):
 
 def run(params: Params) -> None:
     params.validate_params()
+
+    # Check network security first
+    _check_network_security(params.allow_internet_risk)
+
     try:
         if params.prompt:
             while True:

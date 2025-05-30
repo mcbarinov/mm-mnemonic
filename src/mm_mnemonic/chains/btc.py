@@ -57,9 +57,7 @@ class Key:
         # append the 4 checksum bytes to the mainnet_private_key
         checksum = hash_bytes[:4]
 
-        # print('checksum', checksum.hex())
         hash_bytes = private_key_with_version + checksum
-        # print('hash', hash_bytes.hex())
 
         # convert private_key_with_version + checksum into base58 encoded string
         return base58.b58encode(hash_bytes).decode()

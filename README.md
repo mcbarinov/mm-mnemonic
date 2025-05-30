@@ -20,7 +20,7 @@ The `derive` command generates cryptocurrency accounts from BIP39 mnemonic phras
 # Interactive mode - prompts for mnemonic and passphrase
 mm-mnemonic derive --prompt
 
-# Generate new random mnemonic
+# Generate new random mnemonic (add --allow-internet-risk if internet detected)
 mm-mnemonic derive --generate
 
 # Use specific mnemonic
@@ -80,6 +80,7 @@ mm-mnemonic derive --mnemonic "your twenty four word mnemonic phrase here..." --
 | `--limit` | `-l` | Number of accounts to derive | 10 |
 | `--output-dir` | `-o` | Save accounts to directory | None |
 | `--encrypt` | `-e` | Encrypt saved files (requires --output-dir) | False |
+| `--allow-internet-risk` | | Proceed despite internet connection (security risk) | False |
 
 #### Examples
 
@@ -121,6 +122,71 @@ mm-mnemonic derive --generate --output-dir ./my-accounts --encrypt
 - **Automatic Confirmation**: Password/passphrase entries require confirmation to prevent typos
 - **Console Privacy**: When saving to files, sensitive information is hidden from console output
 - **File Encryption**: Optional AES-256-CBC encryption for saved key files
+- **Network Security**: Internet connection detection with explicit consent required (see [Network Security](#network-security))
+
+### Network Security
+
+**mm-mnemonic** includes built-in protection against potential network-based attacks when handling sensitive cryptographic material.
+
+#### Automatic Internet Detection
+
+By default, both `derive` and `search` commands automatically detect active internet connections before processing mnemonics or generating private keys. If an internet connection is detected, the tool will:
+
+1. **Block execution** and display a security warning
+2. **Exit with error code 1** to prevent accidental exposure
+3. **Require explicit consent** via the `--allow-internet-risk` flag to proceed
+
+```bash
+⚠️  SECURITY WARNING: Internet connection detected!
+
+Your mnemonic and private keys may be exposed to potential attacks.
+For maximum security, disconnect from the internet before running this command.
+
+To proceed anyway (NOT recommended), use: --allow-internet-risk
+```
+
+#### The `--allow-internet-risk` Flag
+
+When you need to run the tool with an active internet connection, you must explicitly acknowledge the security risk:
+
+```bash
+# Both commands require the flag when internet is detected
+mm-mnemonic derive --generate --allow-internet-risk
+mm-mnemonic search "0x1234*" --mnemonic "your mnemonic..." --allow-internet-risk
+```
+
+**When internet is detected WITH the flag:**
+- Tool displays a warning but continues execution
+- You acknowledge the potential security risks
+- Recommended only when absolutely necessary
+
+**When NO internet is detected:**
+- Tool runs normally without warnings
+- No `--allow-internet-risk` flag needed
+- This is the recommended secure environment
+
+#### Security Recommendations
+
+For maximum security when handling mnemonics and private keys:
+
+1. **🔒 Air-gapped Environment**: Run on a computer disconnected from the internet
+2. **🛡️ Offline Generation**: Generate mnemonics and derive keys completely offline
+3. **💾 Secure Storage**: Save generated keys to encrypted storage devices
+4. **🗑️ Clean Environment**: Use a clean, malware-free system
+5. **🔐 Encrypted Files**: Always use `--encrypt` when saving keys to files
+
+#### Technical Details
+
+The network detection works by attempting concurrent TCP connections to multiple DNS servers:
+- **Google DNS**: 8.8.8.8:53
+- **Cloudflare DNS**: 1.1.1.1:53  
+- **OpenDNS**: 208.67.222.222:53
+
+Detection typically completes within ~100ms and is designed to avoid false positives from:
+- VPN connections
+- Docker networks  
+- Virtual machine networking
+- Localhost-only configurations
 
 #### Sample Output
 
@@ -169,7 +235,7 @@ The `search` command allows you to find specific addresses derived from a BIP39 
 # Interactive mode - prompts for mnemonic and passphrase
 mm-mnemonic search "0x1234*" --limit 100
 
-# Use specific mnemonic  
+# Use specific mnemonic (add --allow-internet-risk if internet detected)
 mm-mnemonic search "*abcd" --mnemonic "abandon abandon abandon..." --passphrase "optional_passphrase"
 
 # Search multiple patterns
@@ -224,6 +290,7 @@ mm-mnemonic search "0x9999*" --addresses-file patterns.txt --limit 50
 | `--addresses-file` | `-f` | File containing address patterns to search | None |
 | `--derivation-path` | | Custom derivation path template | Auto |
 | `--limit` | `-l` | Maximum number of addresses to check | 1000 |
+| `--allow-internet-risk` | | Proceed despite internet connection (security risk) | False |
 
 #### Examples
 
@@ -306,6 +373,7 @@ Search completed. Checked 10 addresses.
 - **Interactive Input**: When mnemonic/passphrase are not provided via options, they are securely prompted with hidden input
 - **Input Validation**: Mnemonic phrases are validated before starting the search
 - **Console Privacy**: Private keys are displayed but can be hidden in future versions if needed
+- **Network Security**: Internet connection detection with explicit consent required (see [Network Security](#network-security))
 
 #### Performance Tips
 
