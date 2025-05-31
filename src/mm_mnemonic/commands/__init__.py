@@ -1,3 +1,3 @@
-from . import derive, search
+from . import derive, search, show
 
-__all__ = ["derive", "search"]
+__all__ = ["derive", "search", "show"]

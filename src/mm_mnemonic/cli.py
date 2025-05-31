@@ -7,7 +7,7 @@ import typer
 from mm_mnemonic import commands
 from mm_mnemonic.types import Coin
 
-app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
+app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False, rich_markup_mode="rich")
 
 
 def mnemonic_words_callback(value: int) -> int:
@@ -93,6 +93,98 @@ def derive_command(
             generate_passphrase=generate_passphrase,
             prompt=prompt,
             words=words,
+            output_dir=output_dir,
+            encrypt=encrypt,
+            allow_internet_risk=allow_internet_risk,
+        )
+    )
+
+
+@app.command(name="show")
+def show_command(
+    # Input options
+    mnemonic: Annotated[
+        str | None,
+        typer.Option("--mnemonic", "-m", help="BIP39 mnemonic phrase (12-24 words). If not provided, will prompt interactively."),
+    ] = None,
+    passphrase: Annotated[
+        str | None,
+        typer.Option(
+            "--passphrase",
+            "-p",
+            help="BIP39 passphrase (optional, only used with --mnemonic). "
+            "If --mnemonic is provided but --passphrase is not, empty passphrase is used.",
+        ),
+    ] = None,
+    # Cryptocurrency and derivation options
+    coin: Annotated[Coin, typer.Option("--coin", "-c", help="Cryptocurrency to derive accounts for")] = Coin.ETH,
+    derivation_path: Annotated[
+        str | None,
+        typer.Option(
+            "--derivation-path",
+            help="Custom derivation path template (e.g., m/44'/0'/0'/0/{i}). Uses coin-specific default if not specified.",
+        ),
+    ] = None,
+    limit: Annotated[int, typer.Option("--limit", "-l", help="Number of accounts to derive from the mnemonic", min=1)] = 10,
+    # Output options
+    output_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Directory to save account files (keys.toml and addresses.txt). "
+            "If not specified, accounts are only displayed on screen.",
+        ),
+    ] = None,
+    encrypt: Annotated[
+        bool,
+        typer.Option("--encrypt", "-e", help="Encrypt saved keys with AES-256-CBC (requires --output-dir)"),
+    ] = False,
+    # Security options
+    allow_internet_risk: Annotated[
+        bool,
+        typer.Option(
+            "--allow-internet-risk", help="Allow running with internet connection (SECURITY RISK: your mnemonic may be exposed)"
+        ),
+    ] = False,
+) -> None:
+    """
+    Display cryptocurrency accounts derived from an existing BIP39 mnemonic.
+
+    [bold]INPUT MODES:[/bold]
+
+    [italic]Interactive mode[/italic] (no --mnemonic):
+        Prompts for both mnemonic and passphrase with hidden input
+
+    [italic]Direct mode[/italic] (--mnemonic provided):
+        Uses provided mnemonic with optional passphrase (empty if not specified)
+
+    [bold]EXAMPLES:[/bold]
+
+    [dim]# Interactive mode[/dim]
+    [bold]mm-mnemonic show --coin BTC --limit 5[/bold]
+
+    [dim]# Use specific mnemonic without passphrase[/dim]
+    [bold]mm-mnemonic show --mnemonic "abandon abandon abandon..." --coin ETH[/bold]
+
+    [dim]# Use mnemonic with passphrase and save to encrypted files[/dim]
+    [bold]mm-mnemonic show --mnemonic "..." --passphrase "secret" --output-dir ./keys --encrypt[/bold]
+
+    [dim]# Custom derivation path[/dim]
+    [bold]mm-mnemonic show --derivation-path "m/44'/3'/0'/0/{i}" --limit 20[/bold]
+
+    [reverse] SECURITY WARNING [/reverse]
+    This command handles sensitive cryptographic material (mnemonic phrases).
+    For maximum security, run on an air-gapped machine without internet.
+    Use [bold]--allow-internet-risk[/bold] to bypass this check.
+    """
+    commands.show.run(
+        commands.show.Params(
+            coin=coin,
+            mnemonic=mnemonic,
+            passphrase=passphrase,
+            derivation_path=derivation_path,
+            limit=limit,
             output_dir=output_dir,
             encrypt=encrypt,
             allow_internet_risk=allow_internet_risk,
