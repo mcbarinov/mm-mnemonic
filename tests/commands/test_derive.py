@@ -19,7 +19,7 @@ class TestDeriveDefaults:
 
     def test_shows_examples_by_default(self, runner: CliRunner) -> None:
         """When no parameters provided, should show usage examples."""
-        result = runner.invoke(app, ["derive", "--allow-internet-risk"])
+        result = runner.invoke(app, ["derive"])
 
         assert result.exit_code == 1  # Main task (deriving accounts) was not completed
         assert "USAGE EXAMPLES:" in result.stdout
@@ -496,9 +496,20 @@ class TestDeriveIntegration:
         assert eth_result.stdout != btc_result.stdout  # Different coins should produce different addresses
 
 
-@patch("mm_mnemonic.commands.derive.has_internet_connection")
+@patch("mm_mnemonic.network.has_internet_connection")
 class TestNetworkSecurity:
     """Test network security checks."""
+
+    def test_shows_examples_ignores_internet_check(self, mock_internet: MagicMock, runner: CliRunner) -> None:
+        """Test that showing examples works even with internet connection and no flag."""
+        mock_internet.return_value = True
+
+        # Should work without --allow-internet-risk flag when just showing examples
+        result = runner.invoke(app, ["derive"])
+
+        assert result.exit_code == 1  # Main task was not completed (normal for examples)
+        assert "USAGE EXAMPLES:" in result.stdout
+        assert "mm-mnemonic derive --prompt" in result.stdout
 
     def test_blocks_when_internet_detected_and_flag_not_set(self, mock_internet: MagicMock) -> None:
         """Test that command blocks when internet is detected and flag is not set."""

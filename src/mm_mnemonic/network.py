@@ -7,6 +7,9 @@ by attempting connections to multiple DNS servers concurrently.
 import socket
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import typer
+from rich.console import Console
+
 
 def _test_connection(host: str, port: int, timeout: float = 3.0) -> bool:
     """Test TCP connection to a specific host and port.
@@ -57,3 +60,33 @@ def has_internet_connection(timeout: float = 3.0) -> bool:
 
     # All connections failed
     return False
+
+
+def check_network_security(allow_internet_risk: bool) -> None:
+    """Check network security and show warnings.
+
+    Args:
+        allow_internet_risk: Whether to allow running with internet connection
+
+    Raises:
+        typer.Exit: If internet is detected and allow_internet_risk is False
+    """
+    if has_internet_connection():
+        console = Console()
+
+        if not allow_internet_risk:
+            console.print()
+            console.print("🚨 [bold red]SECURITY WARNING: Internet connection detected![/bold red]")
+            console.print()
+            console.print("Your mnemonic and private keys may be exposed to potential attacks.")
+            console.print("For maximum security, disconnect from the internet before running this command.")
+            console.print()
+            console.print("To proceed anyway (NOT recommended), use: [bold cyan]--allow-internet-risk[/bold cyan]")
+            console.print()
+            raise typer.Exit(1)
+
+        console.print()
+        console.print("⚠️  [bold yellow]WARNING: Running with internet connection![/bold yellow]")
+        console.print("Your mnemonic may be exposed to potential attacks.")
+        console.print("For maximum security, disconnect from internet.")
+        console.print()
