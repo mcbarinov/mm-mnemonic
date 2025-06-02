@@ -57,7 +57,7 @@ def run(params: Params) -> None:
             passphrase = typer.prompt("Passphrase", hide_input=True, confirmation_prompt=True)
         else:
             # Default: no passphrase
-            passphrase = ""
+            passphrase = ""  # nosec
 
         # Derive accounts
         derived_accounts = derive_accounts(

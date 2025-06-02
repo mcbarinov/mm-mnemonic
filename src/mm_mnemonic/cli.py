@@ -18,90 +18,6 @@ def mnemonic_words_callback(value: int) -> int:
 
 @app.command(name="derive")
 def derive_command(
-    coin: Annotated[Coin, typer.Option("--coin", "-c", help="Cryptocurrency to derive accounts for")] = Coin.ETH,
-    # Input methods (mutually exclusive)
-    mnemonic: Annotated[str | None, typer.Option("--mnemonic", "-m", help="BIP39 mnemonic phrase (12-24 words)")] = None,
-    passphrase: Annotated[
-        str | None,
-        typer.Option("--passphrase", "-p", help="BIP39 passphrase (optional, use with --mnemonic)"),
-    ] = None,
-    generate: Annotated[bool, typer.Option("--generate", "-g", help="Generate a new random mnemonic phrase")] = False,
-    generate_passphrase: Annotated[
-        bool, typer.Option("--generate-passphrase", "-gp", help="Also generate a random passphrase (use with --generate)")
-    ] = False,
-    prompt: Annotated[bool, typer.Option("--prompt", help="Interactively prompt for mnemonic and passphrase")] = False,
-    # Generation options
-    words: Annotated[
-        int,
-        typer.Option(
-            "--words", "-w", help="Number of words for generated mnemonic (use with --generate)", callback=mnemonic_words_callback
-        ),
-    ] = 24,
-    # Derivation options
-    derivation_path: Annotated[
-        str | None,
-        typer.Option(
-            "--derivation-path",
-            help="Custom derivation path template (e.g., m/44'/0'/0'/0/{i}). Default paths used if not specified.",
-        ),
-    ] = None,
-    limit: Annotated[int, typer.Option("--limit", "-l", help="Number of accounts to derive")] = 10,
-    # Output options
-    output_dir: Annotated[
-        Path | None, typer.Option("--output-dir", "-o", help="Directory to save account files (keys.toml and addresses.txt)")
-    ] = None,
-    encrypt: Annotated[
-        bool,
-        typer.Option("--encrypt", "-e", help="Encrypt saved keys with AES-256-CBC (requires --output-dir)"),
-    ] = False,
-    # Security options
-    allow_internet_risk: Annotated[
-        bool,
-        typer.Option(
-            "--allow-internet-risk", help="Allow running with internet connection (SECURITY RISK: your mnemonic may be exposed)"
-        ),
-    ] = False,
-) -> None:
-    """
-    Derive cryptocurrency accounts from BIP39 mnemonic phrases.
-
-    USAGE MODES:
-
-    --prompt                         Interactive input
-
-    --generate                       Generate new mnemonic
-
-    --generate --generate-passphrase Generate mnemonic + passphrase
-
-    --mnemonic="..." --passphrase="..." Use existing credentials
-
-    SUPPORTED COINS: BTC, BTC_TESTNET, ETH, SOL, TRX
-
-    SECURITY WARNING:
-    This command handles sensitive cryptographic material (mnemonic phrases).
-    For maximum security, run this command on an air-gapped machine without
-    internet connection. Use --allow-internet-risk to bypass this check.
-    """
-    commands.derive.run(
-        commands.derive.Params(
-            coin=coin,
-            limit=limit,
-            derivation_path=derivation_path,
-            mnemonic=mnemonic,
-            passphrase=passphrase,
-            generate=generate,
-            generate_passphrase=generate_passphrase,
-            prompt=prompt,
-            words=words,
-            output_dir=output_dir,
-            encrypt=encrypt,
-            allow_internet_risk=allow_internet_risk,
-        )
-    )
-
-
-@app.command(name="show")
-def show_command(
     # Input options
     mnemonic: Annotated[
         str | None,
@@ -149,7 +65,7 @@ def show_command(
     ] = False,
 ) -> None:
     """
-    Display cryptocurrency accounts derived from an existing BIP39 mnemonic.
+    Display cryptocurrency accounts derived from an existing BIP39 mnemonic
 
     [bold]INPUT MODES:[/bold]
 
@@ -162,24 +78,24 @@ def show_command(
     [bold]EXAMPLES:[/bold]
 
     [dim]# Interactive mode[/dim]
-    [bold]mm-mnemonic show --coin BTC --limit 5[/bold]
+    [bold]mm-mnemonic derive --coin BTC --limit 5[/bold]
 
     [dim]# Use specific mnemonic without passphrase[/dim]
-    [bold]mm-mnemonic show --mnemonic "abandon abandon abandon..." --coin ETH[/bold]
+    [bold]mm-mnemonic derive --mnemonic "abandon abandon abandon..." --coin ETH[/bold]
 
     [dim]# Use mnemonic with passphrase and save to encrypted files[/dim]
-    [bold]mm-mnemonic show --mnemonic "..." --passphrase "secret" --output-dir ./keys --encrypt[/bold]
+    [bold]mm-mnemonic derive --mnemonic "..." --passphrase "secret" --output-dir ./keys --encrypt[/bold]
 
     [dim]# Custom derivation path[/dim]
-    [bold]mm-mnemonic show --derivation-path "m/44'/3'/0'/0/{i}" --limit 20[/bold]
+    [bold]mm-mnemonic derive --derivation-path "m/44'/3'/0'/0/{i}" --limit 20[/bold]
 
     [reverse] SECURITY WARNING [/reverse]
     This command handles sensitive cryptographic material (mnemonic phrases).
     For maximum security, run on an air-gapped machine without internet.
     Use [bold]--allow-internet-risk[/bold] to bypass this check.
     """
-    commands.show.run(
-        commands.show.Params(
+    commands.derive.run(
+        commands.derive.Params(
             coin=coin,
             mnemonic=mnemonic,
             passphrase=passphrase,
@@ -239,7 +155,7 @@ def new_command(
     ] = False,
 ) -> None:
     """
-    Generate new cryptocurrency wallets with fresh BIP39 mnemonics.
+    Generate new cryptocurrency wallets with fresh BIP39 mnemonics
 
     [bold]PASSPHRASE OPTIONS:[/bold]
 
@@ -331,7 +247,7 @@ def search_command(
     ] = False,
 ) -> None:
     """
-    Search for specific addresses in derived accounts from BIP39 mnemonic.
+    Search for specific addresses in derived accounts from BIP39 mnemonic
 
     Interactively prompts for mnemonic and passphrase, then searches through
     derived accounts to find matches for the specified address patterns.
