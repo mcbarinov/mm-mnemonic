@@ -192,6 +192,107 @@ def show_command(
     )
 
 
+@app.command(name="new")
+def new_command(
+    # Generation options
+    generate_passphrase: Annotated[
+        bool, typer.Option("--generate-passphrase", "-g", help="Generate a random passphrase")
+    ] = False,
+    passphrase: Annotated[str | None, typer.Option("--passphrase", "-p", help="Specify a custom passphrase")] = None,
+    prompt_passphrase: Annotated[
+        bool, typer.Option("--prompt-passphrase", "-i", help="Interactively prompt for passphrase")
+    ] = False,
+    words: Annotated[
+        int,
+        typer.Option("--words", "-w", help="Number of words for generated mnemonic", callback=mnemonic_words_callback),
+    ] = 24,
+    # Cryptocurrency and derivation options
+    coin: Annotated[Coin, typer.Option("--coin", "-c", help="Cryptocurrency to derive accounts for")] = Coin.ETH,
+    derivation_path: Annotated[
+        str | None,
+        typer.Option(
+            "--derivation-path",
+            help="Custom derivation path template (e.g., m/44'/0'/0'/0/{i}). Uses coin-specific default if not specified.",
+        ),
+    ] = None,
+    limit: Annotated[int, typer.Option("--limit", "-l", help="Number of accounts to derive from the mnemonic", min=1)] = 10,
+    # Output options
+    output_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Directory to save account files (keys.toml and addresses.txt). "
+            "If not specified, accounts are only displayed on screen.",
+        ),
+    ] = None,
+    encrypt: Annotated[
+        bool,
+        typer.Option("--encrypt", "-e", help="Encrypt saved keys with AES-256-CBC (requires --output-dir)"),
+    ] = False,
+    # Security options
+    allow_internet_risk: Annotated[
+        bool,
+        typer.Option(
+            "--allow-internet-risk", help="Allow running with internet connection (SECURITY RISK: your mnemonic may be exposed)"
+        ),
+    ] = False,
+) -> None:
+    """
+    Generate new cryptocurrency wallets with fresh BIP39 mnemonics.
+
+    [bold]PASSPHRASE OPTIONS:[/bold]
+
+    [italic]No passphrase[/italic] (default):
+        Generates mnemonic without passphrase
+
+    [italic]Generate random passphrase[/italic]:
+        [bold]--generate-passphrase[/bold] - creates secure random passphrase
+
+    [italic]Specify custom passphrase[/italic]:
+        [bold]--passphrase "mypassword"[/bold] - uses your custom passphrase
+
+    [italic]Interactive passphrase input[/italic]:
+        [bold]--prompt-passphrase[/bold] - prompts for passphrase with hidden input
+
+    [bold]EXAMPLES:[/bold]
+
+    [dim]# Generate mnemonic without passphrase[/dim]
+    [bold]mm-mnemonic new --coin ETH[/bold]
+
+    [dim]# Generate with random passphrase[/dim]
+    [bold]mm-mnemonic new --generate-passphrase --coin BTC[/bold]
+
+    [dim]# Use custom passphrase[/dim]
+    [bold]mm-mnemonic new --passphrase "mysecret" --coin ETH[/bold]
+
+    [dim]# Prompt for passphrase interactively[/dim]
+    [bold]mm-mnemonic new --prompt-passphrase --coin SOL[/bold]
+
+    [dim]# Generate 12-word mnemonic with encrypted output[/dim]
+    [bold]mm-mnemonic new --words 12 --generate-passphrase --output-dir ./wallets --encrypt[/bold]
+
+    [reverse] SECURITY WARNING [/reverse]
+    This command generates sensitive cryptographic material (mnemonic phrases).
+    For maximum security, run on an air-gapped machine without internet.
+    Use [bold]--allow-internet-risk[/bold] to bypass this check.
+    """
+    commands.new.run(
+        commands.new.Params(
+            generate_passphrase=generate_passphrase,
+            passphrase=passphrase,
+            prompt_passphrase=prompt_passphrase,
+            words=words,
+            coin=coin,
+            derivation_path=derivation_path,
+            limit=limit,
+            output_dir=output_dir,
+            encrypt=encrypt,
+            allow_internet_risk=allow_internet_risk,
+        )
+    )
+
+
 @app.command(name="search")
 def search_command(
     addresses: Annotated[
